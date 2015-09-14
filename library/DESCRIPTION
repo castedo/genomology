@@ -1,0 +1,10 @@
+Package: genomology
+Type: Package
+Title: Genomic genealogy
+Version: 0.1
+Date: 2015-07-11
+Author: E. Castedo Ellerman
+Maintainer: <castedo@castedo.com>
+Description: Genomic genealogy analysis
+Depends: methods
+License: MIT
