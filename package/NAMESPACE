@@ -1,4 +1,6 @@
 export(read.ancestrydna)
+export(read.ancestrydna.zip)
+export(read.ancestrydna.web)
 export(as.genotype)
 export(allele1)
 export(allele2)

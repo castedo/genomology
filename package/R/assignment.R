@@ -1,6 +1,6 @@
 assignmentClass <- setClass("assignment", contains="integer")
 
-# genotype assignment codes
+# genotype allele assignment codes
 # 0 = assignment ambiguous or genotype is homozygous
 # 1 = (allele1, allele2) must be assigned to (person2, person1) (flip)
 # 2 = (allele1, allele2) must be assigned to (person1, person2) (do not flip)

@@ -52,3 +52,14 @@ read.ancestrydna <- function(file) {
   return(df)
 }
 
+read.ancestrydna.zip <- function(file) {
+  read.ancestrydna(unz(file, "AncestryDNA.txt"))
+}
+
+read.ancestrydna.web <- function(url) {
+  tmpfilename <- tempfile()
+  download.file(url, tmpfilename)
+  read.ancestrydna(unz(tmpfilename, "AncestryDNA.txt"))
+  unlink(tmpfilename)
+}
+
