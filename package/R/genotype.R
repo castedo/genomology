@@ -34,7 +34,7 @@ nucleotide.in.genotype <- function(nucleotide, genotype) {
   return(as.logical(bitwAnd(n, mask[as.integer(genotype)])))
 }
 
-read.rawancestrydna <- function(file) {
+read.ancestrydna.raw <- function(file) {
   cols <- c('character', 'integer', 'integer', 'character', 'character')
   df <- read.table(file, header=TRUE, colClasses=cols, as.is=TRUE)
   df$allele1 <- factor(df$allele1, nucleotide.levels)
@@ -43,7 +43,7 @@ read.rawancestrydna <- function(file) {
 }
 
 read.ancestrydna <- function(file) {
-  df <- read.rawancestrydna(file)
+  df <- read.ancestrydna.raw(file)
   df$genotype <- as.genotype(df$allele1, df$allele2)
   # remove rare highly suspect data (often bogus)
   bad <- (as.integer(df$allele1) < as.integer(df$allele2) |
@@ -58,8 +58,46 @@ read.ancestrydna.zip <- function(file) {
 
 read.ancestrydna.web <- function(url) {
   tmpfilename <- tempfile()
+  on.exit(unlink(tmpfilename))
   download.file(url, tmpfilename)
   read.ancestrydna(unz(tmpfilename, "AncestryDNA.txt"))
-  unlink(tmpfilename)
+}
+
+read.23andme.raw <- function(file) {
+  cols <- c('character', 'character', 'integer', 'character')
+  df <- read.table(file, colClasses=cols, as.is=TRUE)
+  names(df) <- c("rsid", "chromosome", "position", "genotype")
+  return(df) 
+}
+
+read.23andme <- function(file) {
+  df <- read.23andme.raw(file)
+  del <- with(df, chromosome == 'MT'
+                  | substr(rsid,1,2) != "rs"
+                  | genotype %in% c("--", "D", "DD", "DI", "I", "II"))
+  df <- df[!del,]
+  df$chromosome[df$chromosome == 'X'] <- "23"
+  df$chromosome[df$chromosome == 'Y'] <- "24"
+  df$chromosome <- as.integer(df$chromosome)
+  haplo <- df$genotype %in% nucleotide.levels
+  df$chromosome[df$chromosome == 23 & !haplo] <- 25
+  allele1 <- factor(substr(df$genotype, 1, 1), nucleotide.levels)
+  allele2 <- factor(substr(df$genotype, 2, 2), nucleotide.levels)
+  allele2[haplo] <- allele1[haplo]
+  df$genotype <- as.genotype(allele1, allele2)
+  return(df)
+}
+
+read.23andme.zip <- function(file) {
+  zip.list <- unzip(file, list=TRUE)
+  if (NROW(zip.list) > 1) warning("More than one file inside file zip ", file)
+  read.23andme(unz(file, zip.list$Name[1]))
+}
+
+read.23andme.web <- function(url) {
+  tmpfilename <- tempfile()
+  on.exit(unlink(tmpfilename))
+  download.file(url, tmpfilename)
+  read.23andme.zip(tmpfilename)
 }
 
