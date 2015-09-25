@@ -9,14 +9,18 @@ set.genomology.loci <- function(df) {
   assign("loci", df, envir=dataEnv)
 }
 
+get.genomology.loci <- function() {
+  if (!exists("loci", envir=dataEnv)) stop("must call set.genomology.loci")
+  get("loci", envir=dataEnv)
+}
+
 genoposition <- function(chromosome, position) { chromosome * 2^28 + position }
 
 locus.at <- function(chromosome, position) {
   stopifnot(length(chromosome) == length(position))
   stopifnot(is.numeric(chromosome))
   stopifnot(is.numeric(position))
-  if (!exists("loci", envir=dataEnv)) stop("must call set.genomology.loci")
-  loci <- get("loci", envir=dataEnv)
+  loci <- get.genomology.loci()
   goff <- genoposition(chromosome, position)
   start <- genoposition(loci$chromosome, loci$start)
   stop <- genoposition(loci$chromosome, loci$stop)
