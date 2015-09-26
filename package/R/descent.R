@@ -9,32 +9,53 @@ recombination.prob <- function(centimorgan, num.meioses=1, chance.idescent=0.5) 
   return(limit * (1 - exp(-morgan * num.meioses / limit)))
 }
 
-idescent.continue.prob <- function(prev.prob,
-                                   recomb.prob,
-                                   chance.idescent,
-                                   likeli.idescent,
-                                   likeli.not.idescent)
+step.idescent.prob <- function(prev.prob,
+                               recomb.prob,
+                               chance.idescent,
+                               like.idescent,
+                               like.no.idescent)
 {
-  a <- prev.prob * likeli.idescent
-  p <- a / (a + (1 - prev.prob) * likeli.not.idescent)
-  q <- recomb.prob * chance.idescent / (1 - chance.idescent)
-  return(p * (1 - recomb.prob) + (1 - p) * q)
+  yes <- prev.prob * like.idescent
+  no <- (1 - prev.prob) * like.no.idescent
+  p <- yes / (yes + no)
+  ## recomb.prob = \Pr(\overline{I_k} | I_{k-1})
+  ## anti.recomb.prob = \Pr(I_k | \overline{I_{k-1}})
+  anti.recomb.prob <- recomb.prob * chance.idescent / (1 - chance.idescent)
+  return(p * (1 - recomb.prob) + (1 - p) * anti.recomb.prob)
 }
 
 roll.idescent.prob <- function(recomb.prob,
-                               likeli.idescent,
-                               likeli.not.idescent)
+                               like.idescent,
+                               like.no.idescent)
 {
   ret <- numeric(length(recomb.prob))
   ret[1] <- recomb.prob[1]
   for (i in 2:length(recomb.prob)) {
-    ret[i] <- idescent.continue.prob(ret[i-1],
-                                     recomb.prob[i],
-                                     ret[1],
-                                     likeli.idescent[i],
-                                     likeli.not.idescent[i])
+    ret[i] <- step.idescent.prob(ret[i-1],
+                                 recomb.prob[i],
+                                 1 - ret[1],
+                                 like.idescent[i],
+                                 like.no.idescent[i])
   }
   return(ret)
+}
+
+idescent.prob <- function(recomb.prob, like.idescent, like.no.idescent=0.5) {
+  if (length(like.no.idescent) == 1) {
+     like.no.idescent <- rep_len(like.no.idescent, length(like.idescent))
+  }
+  before <- roll.idescent.prob(recomb.prob, like.idescent, like.no.idescent)
+  recomb.prob <- c(recomb.prob[1], rev(recomb.prob[-1]))
+  like.idescent <- rev(like.idescent)
+  like.no.idescent <- rev(like.no.idescent)
+  after <- rev(roll.idescent.prob(recomb.prob, like.idescent, like.no.idescent))
+  chance.idescent <- 1 - recomb.prob[1]
+  yes <- after * before / chance.idescent
+  no <- (1 - after) * (1 - before) / (1 - chance.idescent)
+  prob <- yes / (yes + no)
+  yes <- prob * like.idescent
+  no <- (1 - prob) * (1 - like.no.idescent)
+  return(yes / (yes + no))
 }
 
 haploids.likeli.idescent <- function(hap1, hap2, p.error=0.005) {
