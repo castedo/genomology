@@ -44,12 +44,12 @@ idescent.prob <- function(recomb.prob, like.idescent, like.no.idescent=0.5) {
   if (length(like.no.idescent) == 1) {
      like.no.idescent <- rep_len(like.no.idescent, length(like.idescent))
   }
-  before <- roll.idescent.prob(recomb.prob, like.idescent, like.no.idescent)
-  recomb.prob <- c(recomb.prob[1], rev(recomb.prob[-1]))
-  like.idescent <- rev(like.idescent)
-  like.no.idescent <- rev(like.no.idescent)
-  after <- rev(roll.idescent.prob(recomb.prob, like.idescent, like.no.idescent))
   chance.idescent <- 1 - recomb.prob[1]
+  before <- roll.idescent.prob(recomb.prob, like.idescent, like.no.idescent)
+  rev.recomb.prob <- c(recomb.prob[1], rev(recomb.prob[-1]))
+  after <- rev(roll.idescent.prob(rev.recomb.prob,
+                                  rev(like.idescent),
+                                  rev(like.no.idescent)))
   yes <- after * before / chance.idescent
   no <- (1 - after) * (1 - before) / (1 - chance.idescent)
   prob <- yes / (yes + no)
@@ -60,6 +60,11 @@ idescent.prob <- function(recomb.prob, like.idescent, like.no.idescent=0.5) {
 
 haploids.likeli.idescent <- function(hap1, hap2, p.error=0.005) {
   match <- (hap1 == hap2)
+  return(match + (1 - 2 * match) * p.error)
+}
+
+diploids.likeli.idescent <- function(dip1, dip2, p.error=0.005) {
+  match <- genotypes.overlap(dip1, dip2)
   return(match + (1 - 2 * match) * p.error)
 }
 

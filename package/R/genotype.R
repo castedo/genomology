@@ -25,13 +25,22 @@ allele2 <- function(genotype) {
   factor(n2, nucleotide.levels)
 }
 
+          #        'CC','GG','TT','AA','GC','TG','AT','TC','AG','AC'
+genotype.mask <- c(0x1, 0x2, 0x4, 0x8, 0x3, 0x6, 0xC, 0x5, 0xA, 0x9)
+
 nucleotide.in.genotype <- function(nucleotide, genotype) {
   stopifnot(identical(levels(nucleotide), nucleotide.levels))
   stopifnot(identical(levels(genotype), genotype.levels))
   n <- 2^(as.integer(nucleotide) - 1)
-  #        'CC','GG','TT','AA','GC','TG','AT','TC','AG','AC'
-  mask <- c(0x1, 0x2, 0x4, 0x8, 0x3, 0x6, 0xC, 0x5, 0xA, 0x9)
-  return(as.logical(bitwAnd(n, mask[as.integer(genotype)])))
+  return(as.logical(bitwAnd(n, genotype.mask[as.integer(genotype)])))
+}
+
+genotypes.overlap <- function(genotype1, genotype2) {
+  stopifnot(identical(levels(genotype1), genotype.levels))
+  stopifnot(identical(levels(genotype2), genotype.levels))
+  mask1 <- genotype.mask[as.integer(genotype1)]
+  mask2 <- genotype.mask[as.integer(genotype2)]
+  return(as.logical(bitwAnd(mask1, mask2)))
 }
 
 read.ancestrydna.raw <- function(file) {
