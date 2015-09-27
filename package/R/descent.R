@@ -54,7 +54,7 @@ idescent.prob <- function(recomb.prob, like.idescent, like.no.idescent=0.5) {
   no <- (1 - after) * (1 - before) / (1 - chance.idescent)
   prob <- yes / (yes + no)
   yes <- prob * like.idescent
-  no <- (1 - prob) * (1 - like.no.idescent)
+  no <- (1 - prob) * like.no.idescent
   return(yes / (yes + no))
 }
 

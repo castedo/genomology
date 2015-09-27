@@ -34,5 +34,5 @@ Note appropriate properties:
 \deqn{ \frac{dq}{dd}(0, m, \alpha) = m }
 
 }{ See PDF (latex) version.
-} } # section
+} }
 
