@@ -14,8 +14,8 @@ get.genomology.loci <- function() {
   get("loci", envir=dataEnv)
 }
 
-chromopos <- function(chromosome, position) {
-  position + 2e9 * (pmin(23, chromosome) + (chromosome == 24))
+prob.triage <- function(prob, cutoff=0.05) {
+  as.integer(sign(prob - 0.5) * (prob < cutoff | prob > 1 - cutoff))
 }
 
 chromorder22 <- function(chr, pos) { which(chr <= 22) }
@@ -39,6 +39,28 @@ as.Yposition <- function(chromosome, position) {
   ret[par1] <- ret[par1] - 50e3
   ret[chromosome < 24] <- NA
   return(ret)
+}
+
+chromosome.size <- c(
+    249250621, 243199373, 198022430, 191154276, 180915260, 171115067,
+    159138663, 146364022, 141213431, 135534747, 135006516, 133851895,
+    115169878, 107349540, 102531392,  90354753,  81195210,  78077248,
+     59128983,  63025520,  48129895,  51304566, 155270560,  59373566)
+
+chromopos <- function(chromosome, position) {
+  position + 2e9 * (pmin(23, chromosome) + (chromosome == 24))
+}
+
+chromorange <- function(chromosome, position) {
+  idx <- pmin(23, chromosome) + (chromosome == 24)
+  chromosome.end <- chromopos(chromosome, chromosome.size[idx])
+  chromosome.begin <- chromopos(chromosome, 0)
+  pos <- chromopos(chromosome, position)
+  stopifnot(!is.unsorted(pos))
+  mids <- 0.5 * (c(-Inf, pos) + c(pos, Inf))
+  after <- pmin(mids[-1], chromosome.end)
+  before <- pmax(mids[-length(mids)], chromosome.begin)
+  return(after - before)
 }
 
 genoposition <- function(chromosome, position) { chromosome * 2^28 + position }
