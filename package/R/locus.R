@@ -82,7 +82,7 @@ chromozone.levels <- c(1:22, "Xonly", "Yonly", "PAR1", "PAR2")
 
 chromozone <- function(chromosome, position) {
   n <- chromosome + (chromosome == 25 & position > 1e7)
-  return(factor(n, 1:26, chromozome.levels))
+  return(factor(n, 1:26, chromozone.levels))
 }
 
 genoposition <- function(chromosome, position) { chromosome * 2^28 + position }

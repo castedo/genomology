@@ -34,8 +34,8 @@ roll.idescent.prob <- function(recomb.prob,
     ret[i] <- step.idescent.prob(ret[i-1],
                                  recomb.prob[i],
                                  1 - ret[1],
-                                 like.idescent[i],
-                                 like.no.idescent[i])
+                                 like.idescent[i-1],
+                                 like.no.idescent[i-1])
   }
   return(ret)
 }
@@ -58,13 +58,8 @@ idescent.prob <- function(recomb.prob, like.idescent, like.no.idescent=0.5) {
   return(yes / (yes + no))
 }
 
-haploids.likeli.idescent <- function(hap1, hap2, p.error=0.005) {
-  match <- (hap1 == hap2)
-  return(match + (1 - 2 * match) * p.error)
-}
-
-diploids.likeli.idescent <- function(dip1, dip2, p.error=0.005) {
-  match <- genotypes.overlap(dip1, dip2)
-  return(match + (1 - 2 * match) * p.error)
+fuzzy <- function(x, p.error=0.01) {
+  stopifnot(is.logical(x))
+  return(x + (1 - 2 * x) * p.error)
 }
 
