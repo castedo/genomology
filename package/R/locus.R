@@ -47,20 +47,42 @@ chromosome.size <- c(
     115169878, 107349540, 102531392,  90354753,  81195210,  78077248,
      59128983,  63025520,  48129895,  51304566, 155270560,  59373566)
 
-chromopos <- function(chromosome, position) {
-  position + 2e9 * (pmin(23, chromosome) + (chromosome == 24))
+chromordinate <- function(chromo, position) {
+  n <- as.integer(chromo)
+  return(position + 2e9 * (pmin(23, n) + (n == 24)))
 }
 
-chromorange <- function(chromosome, position) {
-  idx <- pmin(23, chromosome) + (chromosome == 24)
-  chromosome.end <- chromopos(chromosome, chromosome.size[idx])
-  chromosome.begin <- chromopos(chromosome, 0)
-  pos <- chromopos(chromosome, position)
-  stopifnot(!is.unsorted(pos))
-  mids <- 0.5 * (c(-Inf, pos) + c(pos, Inf))
+chromorange <- function(chromo, position) {
+  n <- as.integer(chromo)
+  stopifnot(all(n != 24))
+  chromosome.end <- chromordinate(chromo, chromosome.size[pmin(23, n)])
+  chromosome.begin <- chromordinate(chromo, 0)
+  ord <- chromordinate(chromo, position)
+  stopifnot(!is.unsorted(ord))
+  mids <- 0.5 * (c(-Inf, ord) + c(ord, Inf))
   after <- pmin(mids[-1], chromosome.end)
   before <- pmax(mids[-length(mids)], chromosome.begin)
   return(after - before)
+}
+
+PAR2.startY <- 59034050
+
+chromorangeY <- function(positionY) {
+  lower <- c(-Inf, positionY)
+  upper <- c(positionY, Inf)
+  mids <- 0.5 * (lower + upper)
+  i <- which(lower <= PAR2.startY & upper >= PAR2.startY)
+  mids[i] <- PAR2.startY
+  after <- pmin(mids[-1], chromosome.size[24])
+  before <- pmax(mids[-length(mids)], 0)
+  return(after - before)
+}
+
+chromozone.levels <- c(1:22, "Xonly", "Yonly", "PAR1", "PAR2")
+
+chromozone <- function(chromosome, position) {
+  n <- chromosome + (chromosome == 25 & position > 1e7)
+  return(factor(n, 1:26, chromozome.levels))
 }
 
 genoposition <- function(chromosome, position) { chromosome * 2^28 + position }
