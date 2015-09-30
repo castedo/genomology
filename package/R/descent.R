@@ -60,6 +60,17 @@ idescent.prob <- function(recomb.prob, like.idescent, like.no.idescent=0.5) {
 
 fuzzy <- function(x, p.error=0.01) {
   stopifnot(is.logical(x))
-  return(x + (1 - 2 * x) * p.error)
+  ret <- x + (1 - 2 * x) * p.error
+  ret[is.na(x)] <- 0.5
+  return(ret)
+}
+
+assign.descent <- function(position, assignment) {
+  stopifnot(!is.unsorted(position))
+  stopifnot(all(assignment %in% c(-1:1,NA)))
+  recomb <- recombination.prob(centimorgan.dist(position))
+  like1 <- fuzzy(assignment >= 0)
+  like2 <- fuzzy(assignment <= 0)
+  return(idescent.prob(recomb, like1, like2))
 }
 
