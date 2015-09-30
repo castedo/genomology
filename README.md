@@ -6,7 +6,7 @@ R code for analysis of family genome-wide DNA data (e.g. AncestryDNA raw DNA dat
 Example
 =======
 
-See SNP sequence for lactase persistance (lactose tollerance) gene LCT:
+See SNP sequence for lactase persistance (lactose tolerance) gene LCT:
 
 ```
 library(genomology)

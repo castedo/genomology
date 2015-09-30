@@ -6,6 +6,11 @@ assignmentClass <- setClass("assignment", contains="integer")
 # 2 = (allele1, allele2) must be assigned to (person1, person2) (do not flip)
 # 3 = assignment impossible
 
+as.sign <- function(assignment) {
+  stopifnot(is(assignment, assignmentClass))
+  c(0, -1, 1, NA)[assignment + 1]
+}
+
 is.impossible.assignment <- function(assignment) {
   stopifnot(is(assignment, assignmentClass))
   return(assignment == 3)
@@ -59,7 +64,7 @@ assign.parents <- function(mom, pop, kid, from.mom.only=FALSE) {
 }
 
 # assign parents's mom as person1 and parent's pop as person2
-assign.grandparents <- function(parental.assignment, passage.assignment) {
+old.assign.grandparents <- function(parental.assignment, passage.assignment) {
   stopifnot(is(parental.assignment, assignmentClass))
   stopifnot(is(passage.assignment, assignmentClass))
   ret <- parental.assignment
@@ -68,6 +73,16 @@ assign.grandparents <- function(parental.assignment, passage.assignment) {
   ret[passage.assignment == 0] <- 0 # ambiguous/homozygous allele passed down
   ret[passage.assignment == 3] <- 3 # not possible
   return(as(ret, "assignment"))
+}
+
+# assign positive to parents's mom and negative to parent's pop
+assign.grandparents <- function(parental.assignment, passage.assignment) {
+  parent.sign <- as.sign(parental.assignment)
+  passage.sign <- as.sign(passage.assignment)
+  ret <- parent.sign * passage.sign
+  old.ret <- old.assign.grandparents(parental.assignment, passage.assignment)
+  stopifnot(all(ret == as.sign(old.ret), na.rm=TRUE))
+  return(ret)
 }
 
 assign.passage <- function(parent, kid) {
