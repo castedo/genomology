@@ -38,17 +38,12 @@ assign.parent <- function(parent1, kid) {
   return(as(bit0 + bit1 * 2, "assignment"))
 }
 
-flip.assignment <- function(assignment) {
-  stopifnot(is(assignment, assignmentClass))
-  bit0 <- assignment %/% 2
-  bit1 <- assignment %% 2
-  return(as(bit0 + bit1 * 2, "assignment"))
-}
-
-reconcile.assignments <- function(assignment1, assignment2) {
-  stopifnot(is(assignment1, assignmentClass))
-  stopifnot(is(assignment2, assignmentClass))
-  return(as(bitwOr(assignment1, assignment2), "assignment"))
+reconcile.signs <- function(sign1, sign2) {
+  stopifnot(all(sign1 %in% c(-1:1,NA)))
+  stopifnot(all(sign2 %in% c(-1:1,NA)))
+  ret <- sign(sign1 + sign2)
+  ret[sign1 * sign2 < 0] <- NA # conflicting signs
+  return(ret)
 }
 
 assign.parents <- function(mom, pop, kid, from.mom.only=FALSE) {
@@ -56,42 +51,26 @@ assign.parents <- function(mom, pop, kid, from.mom.only=FALSE) {
   stopifnot(identical(levels(mom), genotype.levels))
   stopifnot(identical(levels(pop), genotype.levels))
   stopifnot(!any(from.mom.only & heterozygous(kid)))
-  momass <- assign.parent(mom, kid)
-  ass <- reconcile.assignments(momass,
-                               flip.assignment(assign.parent(pop, kid)))
-  ass[from.mom.only] <- momass[from.mom.only]
-  return(ass)
-}
-
-# assign parents's mom as person1 and parent's pop as person2
-old.assign.grandparents <- function(parental.assignment, passage.assignment) {
-  stopifnot(is(parental.assignment, assignmentClass))
-  stopifnot(is(passage.assignment, assignmentClass))
-  ret <- parental.assignment
-  reverse <- (passage.assignment == 1) # allele2 was passed down
-  ret[reverse] <- flip.assignment(ret)[reverse] # so reserve assignment
-  ret[passage.assignment == 0] <- 0 # ambiguous/homozygous allele passed down
-  ret[passage.assignment == 3] <- 3 # not possible
-  return(as(ret, "assignment"))
+  mom.sign <- as.sign(assign.parent(mom, kid))
+  ret <- reconcile.signs(mom.sign, -as.sign(assign.parent(pop, kid)))
+  ret[from.mom.only] <- mom.sign[from.mom.only]
+  return(ret)
 }
 
 # assign positive to parents's mom and negative to parent's pop
-assign.grandparents <- function(parental.assignment, passage.assignment) {
-  parent.sign <- as.sign(parental.assignment)
-  passage.sign <- as.sign(passage.assignment)
-  ret <- parent.sign * passage.sign
-  old.ret <- old.assign.grandparents(parental.assignment, passage.assignment)
-  stopifnot(all(ret == as.sign(old.ret), na.rm=TRUE))
-  return(ret)
+assign.grandparents <- function(parent.sign, passage.sign) {
+  stopifnot(all(parent.sign %in% c(-1:1,NA)))
+  stopifnot(all(passage.sign %in% c(-1:1,NA)))
+  return(parent.sign * passage.sign)
 }
 
 assign.passage <- function(parent, kid) {
   stopifnot(identical(levels(parent), genotype.levels))
   stopifnot(identical(levels(kid), nucleotide.levels))
-  bit0 <- kid != allele1(parent)
-  bit1 <- kid != allele2(parent)
-  code <- bit0 + bit1 * 2
-  code[is.na(kid)] <- 0
-  return(as(code, "assignment"))
+  not.a1 <- kid != allele1(parent)
+  not.a2 <- kid != allele2(parent)
+  ret <- (not.a2 - not.a1)
+  ret[not.a1 & not.a2] <- NA # not possible
+  return(ret)
 }
 
