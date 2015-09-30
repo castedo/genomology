@@ -182,7 +182,7 @@ with which we can get
 \deqn{ \Pr(I | W \cap A \cap B)
      = \frac{ \Pr(I \cap W | A \cap B) }{
               \Pr(W | A \cap B) }
-     = \frac{\Pr(I | A \cap B) \phi_i}{\Pr(I | A \cap B) \phi_i + \Pr(\bar{I} | A \cap B) \psi_i} }
+     = \frac{\Pr(I | A \cap B) \phi_i}{\Pr(I | A \cap B) \phi_i + \Pr(\bar{I} | A \cap B) \psi_i}
 }
 
 which is the probability of identity-by-descent given all available observed evidence.

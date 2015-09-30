@@ -62,12 +62,12 @@ assign.parents <- function(mom, pop, kid, from.mom.only=FALSE) {
 assign.grandparents <- function(parental.assignment, passage.assignment) {
   stopifnot(is(parental.assignment, assignmentClass))
   stopifnot(is(passage.assignment, assignmentClass))
-  code <- parental.assignment
+  ret <- parental.assignment
   reverse <- (passage.assignment == 1) # allele2 was passed down
-  code[reverse] <- flip.assignment(code)[reverse] # so reserve assignment
-  code[passage.assignment == 0] <- 0 # ambiguous/homozygous allele passed down
-  code[passage.assignment == 3] <- 3 # not possible
-  return(as(code, "assignment"))
+  ret[reverse] <- flip.assignment(ret)[reverse] # so reserve assignment
+  ret[passage.assignment == 0] <- 0 # ambiguous/homozygous allele passed down
+  ret[passage.assignment == 3] <- 3 # not possible
+  return(as(ret, "assignment"))
 }
 
 assign.passage <- function(parent, kid) {
