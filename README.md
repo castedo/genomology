@@ -36,7 +36,7 @@ In this example:
   ranges
 * genotypes for lactase persistance (lactose tolerance) regulating gene MCM6 is
   printed
-* estimation of which regions of girl are decended from grandma
+* estimation of which chromosome regions of girl are descended from grandma
 * bar plot by chromosome of how much of girls DNA is inherited from dad's mom
   (grandma) vs dad's dad
 
@@ -73,8 +73,6 @@ tab[is.na(tab)] <- 0
 
 barplot(tab, horiz=TRUE, las=1, ylab="Chromosome")
 ```
-
-
 
 INSTALL
 =======
