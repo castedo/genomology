@@ -74,6 +74,16 @@ tab[is.na(tab)] <- 0
 barplot(tab, horiz=TRUE, las=1, ylab="Chromosome")
 ```
 
+MATH
+====
+
+The core mathematical functions used in this package are `idescent.prob` and `recombination.prob`.
+Documentation is in the package help, but only the PDF (LaTeX) versions have
+the mathematical derivations. For convenience, the PDF versions are also online:
+
+* [idescent.prob](http://ref.castedo.com/dna/idescent.prob.pdf)
+* [recombination.prob](http://ref.castedo.com/dna/recombination.prob.pdf)
+
 INSTALL
 =======
 
