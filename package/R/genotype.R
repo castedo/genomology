@@ -58,6 +58,8 @@ read.ancestrydna <- function(file) {
   bad <- (as.integer(df$allele1) < as.integer(df$allele2) |
           df$genotype %in% c('GC', 'AT'))
   df$genotype[bad] <- NA
+  df$allele1 <- NULL
+  df$allele2 <- NULL
   return(df)
 }
 
@@ -108,5 +110,19 @@ read.23andme.web <- function(url) {
   on.exit(unlink(tmpfilename))
   download.file(url, tmpfilename)
   read.23andme.zip(tmpfilename)
+}
+
+read.dna.zip <- function(file) {
+  zip.list <- unzip(file, list=TRUE)
+  if (NROW(zip.list) > 1) warning("More than one file inside file zip ", file)
+  if (zip.list$Name == "AncestryDNA.txt") return(read.ancestrydna.zip(file))
+  return(read.23andme(unz(file, zip.list$Name[1])))
+}
+
+read.dna.web <- function(url) {
+  tmpfilename <- tempfile()
+  on.exit(unlink(tmpfilename))
+  download.file(url, tmpfilename)
+  read.dna.zip(tmpfilename)
 }
 
