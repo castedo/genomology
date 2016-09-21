@@ -1,6 +1,18 @@
 nucleotide.levels <- c('C','G','T','A')
 genotype.levels <- c('CC','GG','TT','AA','GC','TG','AT','TC','AG','AC')
 
+as.nucleotide <- function(x) {
+  factor(x, nucleotide.levels)
+}
+
+is.nucleotide <- function(x) {
+  identical(levels(x), nucleotide.levels)
+}
+
+transition.nucleotide <- function(nucleotide) {
+  as.nucleotide(c('T','A','C','G')[nucleotide])
+}
+
 as.genotype <- function(allele1, allele2) {
   stopifnot(identical(levels(allele1), nucleotide.levels))
   stopifnot(identical(levels(allele2), nucleotide.levels))
