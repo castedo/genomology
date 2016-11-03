@@ -131,6 +131,18 @@ read.dna.zip <- function(file) {
   return(read.23andme(unz(file, zip.list$Name[1])))
 }
 
+read.dna <- function(file) {
+  is_txt <- (substr(file, nchar(file)-3, nchar(file)) == ".txt")
+  if (is_txt) {
+    parts <- strsplit(file, '/')[[1]]
+    filename <- parts[length(parts)]
+    if ( substr(filename, 1, 7) == "genome_") {
+      return(read.23andme(file))
+    }
+  }
+  return(read.dna.zip(file))
+}
+
 read.dna.web <- function(url) {
   tmpfilename <- tempfile()
   on.exit(unlink(tmpfilename))
