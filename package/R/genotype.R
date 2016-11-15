@@ -95,17 +95,15 @@ read.23andme.raw <- function(file) {
 
 read.23andme <- function(file) {
   df <- read.23andme.raw(file)
-  del <- with(df, chromosome == 'MT'
-                  | substr(rsid,1,2) != "rs"
-                  | genotype %in% c("--", "D", "DD", "DI", "I", "II"))
+  del <- with(df, chromosome == 'MT' | substr(rsid,1,2) != "rs")
   df <- df[!del,]
   df$chromosome[df$chromosome == 'X'] <- "23"
   df$chromosome[df$chromosome == 'Y'] <- "24"
   df$chromosome <- as.integer(df$chromosome)
   haplo <- df$genotype %in% nucleotide.levels
   df$chromosome[df$chromosome == 23 & !haplo] <- 25
-  allele1 <- factor(substr(df$genotype, 1, 1), nucleotide.levels)
-  allele2 <- factor(substr(df$genotype, 2, 2), nucleotide.levels)
+  allele1 <- as.nucleotide(substr(df$genotype, 1, 1))
+  allele2 <- as.nucleotide(substr(df$genotype, 2, 2))
   allele2[haplo] <- allele1[haplo]
   df$genotype <- as.genotype(allele1, allele2)
   return(df)
