@@ -75,17 +75,6 @@ read.ancestrydna <- function(file) {
   return(df)
 }
 
-read.ancestrydna.zip <- function(file) {
-  read.ancestrydna(unz(file, "AncestryDNA.txt"))
-}
-
-read.ancestrydna.web <- function(url) {
-  tmpfilename <- tempfile()
-  on.exit(unlink(tmpfilename))
-  download.file(url, tmpfilename)
-  read.ancestrydna(unz(tmpfilename, "AncestryDNA.txt"))
-}
-
 read.23andme.raw <- function(file) {
   cols <- c('character', 'character', 'integer', 'character')
   df <- read.table(file, colClasses=cols, as.is=TRUE)
@@ -109,34 +98,48 @@ read.23andme <- function(file) {
   return(df)
 }
 
-read.23andme.zip <- function(file) {
-  zip.list <- unzip(file, list=TRUE)
-  if (NROW(zip.list) > 1) warning("More than one file inside file zip ", file)
-  read.23andme(unz(file, zip.list$Name[1]))
+read.familyfinder <- function(file) {
+  df <- read.csv(file, colClasses="character")
+  expect <- c("RSID", "CHROMOSOME", "POSITION", "RESULT")
+  stopifnot(all.equal(names(df), expect))
+  names(df) <- c("rsid", "chromosome", "position", "genotype")
+  del <- with(df, substr(rsid,1,2) != "rs")
+  df <- df[!del,]
+  df$chromosome[df$chromosome == 'X'] <- "23"
+  df$chromosome[df$chromosome == 'Y'] <- "24"
+  df$chromosome <- as.integer(df$chromosome)
+  df$position <- as.integer(df$position)
+  allele1 <- as.nucleotide(substr(df$genotype, 1, 1))
+  allele2 <- as.nucleotide(substr(df$genotype, 2, 2))
+  df$genotype <- as.genotype(allele1, allele2)
+  return(df) 
 }
 
-read.23andme.web <- function(url) {
-  tmpfilename <- tempfile()
-  on.exit(unlink(tmpfilename))
-  download.file(url, tmpfilename)
-  read.23andme.zip(tmpfilename)
+read.dna.text <- function(file, filename) {
+  if (filename == "AncestryDNA.txt") return(read.ancestrydna(file))
+  extension <- substr(filename, nchar(filename)-3, nchar(filename))
+  if (extension == ".csv") return(read.familyfinder(file))
+  return(read.23andme(file))
 }
 
 read.dna.zip <- function(file) {
   zip.list <- unzip(file, list=TRUE)
-  if (NROW(zip.list) > 1) warning("More than one file inside file zip ", file)
-  if (zip.list$Name == "AncestryDNA.txt") return(read.ancestrydna.zip(file))
-  return(read.23andme(unz(file, zip.list$Name[1])))
+  if (NROW(zip.list) > 1) warning("More than one file inside zip file ", file)
+  filename <- zip.list$Name[1]
+  return(read.dna.text(unz(file, filename), filename))
 }
 
 read.dna <- function(file) {
-  is_txt <- (substr(file, nchar(file)-3, nchar(file)) == ".txt")
-  if (is_txt) {
-    parts <- strsplit(file, '/')[[1]]
-    filename <- parts[length(parts)]
-    if ( substr(filename, 1, 7) == "genome_") {
-      return(read.23andme(file))
-    }
+  parts <- strsplit(file, '/', fixed=TRUE)[[1]]
+  filename <- parts[length(parts)]
+  parts <- strsplit(filename, '.', fixed=TRUE)[[1]]
+  extension <- parts[length(parts)]
+  if (extension %in% c("txt", "csv")) {
+    return(read.dna.text(file, filename))
+  }
+  if (extension == "gz") {
+    filename <- substr(filename, 1, nchar(filename) - 3)
+    return(read.dna.text(gzfile(file), filename))
   }
   return(read.dna.zip(file))
 }
