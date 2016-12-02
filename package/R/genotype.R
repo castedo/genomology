@@ -116,7 +116,9 @@ read.familyfinder <- function(file) {
 }
 
 read.dna.text <- function(file, filename) {
-  if (filename == "AncestryDNA.txt") return(read.ancestrydna(file))
+  len <- nchar(filename)
+  ancestrydna <- (substr(filename, len - 14, len) == "AncestryDNA.txt")
+  if (ancestrydna) return(read.ancestrydna(file))
   extension <- substr(filename, nchar(filename)-3, nchar(filename))
   if (extension == ".csv") return(read.familyfinder(file))
   return(read.23andme(file))
