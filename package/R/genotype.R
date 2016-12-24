@@ -55,16 +55,12 @@ genotypes.overlap <- function(genotype1, genotype2) {
   return(as.logical(bitwAnd(mask1, mask2)))
 }
 
-read.ancestrydna.raw <- function(file) {
+read.ancestrydna <- function(first.line, file) {
+  if (!startsWith(first.line, "#AncestryDNA")) return(NULL)
   cols <- c('character', 'integer', 'integer', 'character', 'character')
   df <- read.table(file, header=TRUE, colClasses=cols, as.is=TRUE)
   df$allele1 <- factor(df$allele1, nucleotide.levels)
   df$allele2 <- factor(df$allele2, nucleotide.levels)
-  return(df)
-}
-
-read.ancestrydna <- function(file) {
-  df <- read.ancestrydna.raw(file)
   df$genotype <- as.genotype(df$allele1, df$allele2)
   # remove rare highly suspect data (often bogus)
   bad <- (as.integer(df$allele1) < as.integer(df$allele2) |
@@ -98,10 +94,12 @@ read.23andme <- function(file) {
   return(df)
 }
 
-read.familyfinder <- function(file) {
-  df <- read.csv(file, colClasses="character")
-  expect <- c("RSID", "CHROMOSOME", "POSITION", "RESULT")
-  stopifnot(all.equal(names(df), expect))
+read.familyfinder <- function(first.line, file) {
+  col.names <- c("RSID", "CHROMOSOME", "POSITION", "RESULT")
+  if (first.line != paste(col.names, collapse=",")) {
+    return(NULL)
+  }
+  df <- read.csv(file, col.names=col.names, colClasses="character")
   names(df) <- c("rsid", "chromosome", "position", "genotype")
   del <- with(df, substr(rsid,1,2) != "rs")
   df <- df[!del,]
@@ -115,12 +113,14 @@ read.familyfinder <- function(file) {
   return(df) 
 }
 
-read.dna.text <- function(file, filename) {
-  len <- nchar(filename)
-  ancestrydna <- (substr(filename, len - 14, len) == "AncestryDNA.txt")
-  if (ancestrydna) return(read.ancestrydna(file))
-  extension <- substr(filename, nchar(filename)-3, nchar(filename))
-  if (extension == ".csv") return(read.familyfinder(file))
+read.dna.text <- function(file) {
+  file <- file(file, "rt")
+  on.exit(close(file))
+  line <- readLines(file, n=1)
+  ret <- read.familyfinder(line, file)
+  if (!is.null(ret)) return(ret);
+  ret <- read.ancestrydna(line, file)
+  if (!is.null(ret)) return(ret);
   return(read.23andme(file))
 }
 
@@ -128,7 +128,7 @@ read.dna.zip <- function(file) {
   zip.list <- unzip(file, list=TRUE)
   if (NROW(zip.list) > 1) warning("More than one file inside zip file ", file)
   filename <- zip.list$Name[1]
-  return(read.dna.text(unz(file, filename), filename))
+  return(read.dna.text(unz(file, filename)))
 }
 
 read.dna <- function(file) {
@@ -137,11 +137,10 @@ read.dna <- function(file) {
   parts <- strsplit(filename, '.', fixed=TRUE)[[1]]
   extension <- parts[length(parts)]
   if (extension %in% c("txt", "csv")) {
-    return(read.dna.text(file, filename))
+    return(read.dna.text(file))
   }
   if (extension == "gz") {
-    filename <- substr(filename, 1, nchar(filename) - 3)
-    return(read.dna.text(gzfile(file), filename))
+    return(read.dna.text(gzfile(file)))
   }
   return(read.dna.zip(file))
 }
