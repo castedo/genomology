@@ -114,8 +114,14 @@ read.familyfinder <- function(first.line, file) {
 }
 
 read.dna.text <- function(file) {
-  file <- file(file, "rt")
-  on.exit(close(file))
+  if (is.character(file)) {
+    file <- file(file, "rt")
+    on.exit(close(file))
+  }
+  if (!isOpen(file, "rt")) {
+    open(file, "rt")
+    on.exit(close(file))
+  }
   line <- readLines(file, n=1)
   ret <- read.familyfinder(line, file)
   if (!is.null(ret)) return(ret);
