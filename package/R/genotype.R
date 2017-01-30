@@ -62,10 +62,6 @@ read.ancestrydna <- function(first.line, file) {
   df$allele1 <- factor(df$allele1, nucleotide.levels)
   df$allele2 <- factor(df$allele2, nucleotide.levels)
   df$genotype <- as.genotype(df$allele1, df$allele2)
-  # remove rare highly suspect data (often bogus)
-  bad <- (as.integer(df$allele1) < as.integer(df$allele2) |
-          df$genotype %in% c('GC', 'AT'))
-  df$genotype[bad] <- NA
   df$allele1 <- NULL
   df$allele2 <- NULL
   return(df)

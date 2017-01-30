@@ -1,8 +1,8 @@
 Package: genomology
 Type: Package
 Title: Genomic genealogy
-Version: 0.7
-Date: 2016-12-28
+Version: 0.8
+Date: 2017-01-30
 Author: E. Castedo Ellerman
 Maintainer: <castedo@castedo.com>
 Description: Genomic genealogy analysis
