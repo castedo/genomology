@@ -138,7 +138,7 @@ read.dna <- function(file) {
   filename <- parts[length(parts)]
   parts <- strsplit(filename, '.', fixed=TRUE)[[1]]
   extension <- parts[length(parts)]
-  if (extension %in% c("txt", "csv")) {
+  if (tolower(extension) %in% c("txt", "csv")) {
     return(read.dna.text(file))
   }
   if (extension == "gz") {
