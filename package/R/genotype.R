@@ -90,12 +90,20 @@ read.23andme <- function(file) {
   return(df)
 }
 
+read.myheritage <- function(first.line, file) {
+  if (!startsWith(first.line, "# MyHeritage DNA ")) return(NULL)
+  df <- read.csv(file, header=TRUE, colClasses="character", comment.char="#")
+  return(read.familyfinder.data(df))
+}
+
 read.familyfinder <- function(first.line, file) {
   col.names <- c("RSID", "CHROMOSOME", "POSITION", "RESULT")
-  if (first.line != paste(col.names, collapse=",")) {
-    return(NULL)
-  }
+  if (first.line != paste(col.names, collapse=",")) return(NULL)
   df <- read.csv(file, col.names=col.names, colClasses="character")
+  return(read.familyfinder.data(df))
+}
+
+read.familyfinder.data <- function(df) {
   names(df) <- c("rsid", "chromosome", "position", "genotype")
   del <- with(df, substr(rsid,1,2) != "rs")
   df <- df[!del,]
@@ -120,6 +128,8 @@ read.dna.text <- function(file) {
   }
   line <- readLines(file, n=1)
   ret <- read.familyfinder(line, file)
+  if (!is.null(ret)) return(ret);
+  ret <- read.myheritage(line, file)
   if (!is.null(ret)) return(ret);
   ret <- read.ancestrydna(line, file)
   if (!is.null(ret)) return(ret);
