@@ -114,10 +114,33 @@ read.familyfinder.data <- function(df) {
   allele1 <- as.nucleotide(substr(df$genotype, 1, 1))
   allele2 <- as.nucleotide(substr(df$genotype, 2, 2))
   df$genotype <- as.genotype(allele1, allele2)
-  return(df) 
+  return(df)
 }
 
-read.dna.text <- function(file) {
+read.geno2 <- function(first.line, file) {
+  # first.line sometimes header, sometimes non-rsid data, but maybe rsid data
+  # regardless it gets ignored here
+  df <- read.csv(file, colClasses="character", comment.char="#")
+  return(read.geno2.data(df))
+}
+
+read.geno2.data <- function(df) {
+  names(df) <- c("rsid", "chromosome", "allele1", "allele2")
+  del <- with(df, substr(rsid,1,2) != "rs")
+  df <- df[!del,]
+  df$chromosome[df$chromosome == 'X'] <- "23"
+  df$chromosome[df$chromosome == 'Y'] <- "24"
+  df$chromosome <- as.integer(df$chromosome)
+  df$position <- NA
+  df$allele1 <- factor(df$allele1, nucleotide.levels)
+  df$allele2 <- factor(df$allele2, nucleotide.levels)
+  df$genotype <- as.genotype(df$allele1, df$allele2)
+  df$allele1 <- NULL
+  df$allele2 <- NULL
+  return(df)
+}
+
+read.dna.text <- function(file, filename=NULL) {
   if (is.character(file)) {
     file <- file(file, "rt")
     on.exit(close(file))
@@ -133,14 +156,25 @@ read.dna.text <- function(file) {
   if (!is.null(ret)) return(ret);
   ret <- read.ancestrydna(line, file)
   if (!is.null(ret)) return(ret);
+  if (!is.null(filename) && endsWith(filename, ".all.csv")) {
+    return(read.geno2(line, file))
+  }
   return(read.23andme(file))
 }
 
 read.dna.zip <- function(file) {
   zip.list <- unzip(file, list=TRUE)
-  if (NROW(zip.list) > 1) warning("More than one file inside zip file ", file)
-  filename <- zip.list$Name[1]
-  return(read.dna.text(unz(file, filename)))
+  filenames = zip.list$Name
+  if (length(filenames) > 1) {
+    # check for National Geographic Geno 2.0 genetic.zip file
+    geno2 <- endsWith(filenames, ".all.csv")
+    if (any(geno2)) {
+      filenames <- filenames[geno2]
+    }
+    if (length(filenames) > 1) warning("More than one file choice inside zip file ", file)
+  }
+  filename <- filenames[1]
+  return(read.dna.text(unz(file, filename), filename))
 }
 
 read.dna <- function(file) {
@@ -149,7 +183,7 @@ read.dna <- function(file) {
   parts <- strsplit(filename, '.', fixed=TRUE)[[1]]
   extension <- parts[length(parts)]
   if (tolower(extension) %in% c("txt", "csv")) {
-    return(read.dna.text(file))
+    return(read.dna.text(file, filename))
   }
   if (extension == "gz") {
     return(read.dna.text(gzfile(file)))
