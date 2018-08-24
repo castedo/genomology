@@ -20,8 +20,13 @@ prob.triage <- function(prob, cutoff=0.05) {
 
 chromorder22 <- function(chr, pos) { which(chr <= 22) }
 
+par1.end <- 2.699e6
+par2.start <- 154.932e6
+
 chromorderX <- function(chr, pos) {
-  c(which(chr == 25 & pos < 1e7), which(chr == 23), which(chr == 25 & pos > 1e7))
+  c(which(chr == 25 & pos < par1.end),
+    which(chr == 23),
+    which(chr == 25 & pos > par2.start))
 }
 
 chromorder23 <- function(chr, pos) {
@@ -29,7 +34,9 @@ chromorder23 <- function(chr, pos) {
 }
 
 chromorderY <- function(chr, pos) {
-  c(which(chr == 25 & pos < 1e7), which(chr == 24), which(chr == 25 & pos > 1e7))
+  c(which(chr == 25 & pos < par1.end),
+    which(chr == 24),
+    which(chr == 25 & pos > par2.start))
 }
 
 # convert GRCh37.p13 X (PAR) chromosome positions to Y (PAR)
