@@ -59,6 +59,10 @@ read.ancestrydna <- function(first.line, file) {
   if (!startsWith(first.line, "#AncestryDNA")) return(NULL)
   cols <- c('character', 'integer', 'integer', 'character', 'character')
   df <- read.table(file, header=TRUE, colClasses=cols, as.is=TRUE)
+  return(read.ancestrydna.data(df))
+}
+
+read.ancestrydna.data <- function(df) {
   df$allele1 <- factor(df$allele1, nucleotide.levels)
   df$allele2 <- factor(df$allele2, nucleotide.levels)
   df$genotype <- as.genotype(df$allele1, df$allele2)
@@ -92,17 +96,31 @@ read.23andme <- function(file) {
 read.myheritage <- function(first.line, file) {
   if (!startsWith(first.line, "# MyHeritage DNA ")) return(NULL)
   df <- read.csv(file, header=TRUE, colClasses="character", comment.char="#")
-  return(read.familyfinder.data(df))
+  return(read.myheritage.data(df))
 }
 
 read.familyfinder <- function(first.line, file) {
+  if (startsWith(first.line, "# famfinder")) {
+    col.names <- c("rsid", "chromosome", "position", "allele1", "allele2")
+    cls <- c('character', 'character', 'integer', 'character', 'character')
+    df <- read.csv(file, col.names=col.names, colClasses=cls, comment.char="#")
+    df$chromosome[df$chromosome == 'X'] <- "23"
+    df$chromosome[df$chromosome == 'Y'] <- "24"
+    df$chromosome[df$chromosome == 'XY'] <- "25"
+    df$chromosome <- as.integer(df$chromosome)
+    ok <- with(df, substr(rsid,1,2) == "rs" & chromosome > 0)
+    df <- df[ok,]
+    # new 2019 family finder data rows cleaned same as AncestryDNA
+    return(read.ancestrydna.data(df))
+  }
   col.names <- c("RSID", "CHROMOSOME", "POSITION", "RESULT")
   if (first.line != paste(col.names, collapse=",")) return(NULL)
   df <- read.csv(file, col.names=col.names, colClasses="character")
-  return(read.familyfinder.data(df))
+  # old pre-2019 family finder data rows same as MyHeritage format
+  return(read.myheritage.data(df))
 }
 
-read.familyfinder.data <- function(df) {
+read.myheritage.data <- function(df) {
   names(df) <- c("rsid", "chromosome", "position", "genotype")
   del <- with(df, substr(rsid,1,2) != "rs")
   df <- df[!del,]
