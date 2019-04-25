@@ -56,7 +56,7 @@ genotypes.overlap <- function(genotype1, genotype2) {
 }
 
 read.ancestrydna <- function(first.line, file) {
-  if (!startsWith(first.line, "#AncestryDNA")) return(NULL)
+  if (!grepl("AncestryDNA", first.line, ignore.case=TRUE)) return(NULL)
   cols <- c('character', 'integer', 'integer', 'character', 'character')
   df <- read.table(file, header=TRUE, colClasses=cols, as.is=TRUE)
   return(read.ancestrydna.data(df))
@@ -94,13 +94,13 @@ read.23andme <- function(file) {
 }
 
 read.myheritage <- function(first.line, file) {
-  if (!startsWith(first.line, "# MyHeritage DNA ")) return(NULL)
+  if (!grepl("MyHeritage", first.line, ignore.case=TRUE)) return(NULL)
   df <- read.csv(file, header=TRUE, colClasses="character", comment.char="#")
   return(read.myheritage.data(df))
 }
 
 read.familyfinder <- function(first.line, file) {
-  if (startsWith(first.line, "# famfinder")) {
+  if (grepl("famfinder", first.line, ignore.case=TRUE)) {
     col.names <- c("rsid", "chromosome", "position", "allele1", "allele2")
     cls <- c('character', 'character', 'integer', 'character', 'character')
     df <- read.csv(file, col.names=col.names, colClasses=cls, comment.char="#")
